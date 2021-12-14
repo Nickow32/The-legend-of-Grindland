@@ -1,4 +1,23 @@
 import pygame
+import os
+import sys
+
+pygame.init()
+
+
+def load_image(name, colorkey=None):
+    fullname = os.path.join('images', name)
+    if not os.path.isfile(fullname):
+        return
+    image = pygame.image.load(fullname)
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
+    return image
 
 
 class Board:
@@ -53,7 +72,7 @@ class Game:
     def render(self):
         self.board.render(self.screen)
 
-    def get_click(self,pos):
+    def get_click(self, pos):
         self.board.get_click(pos)
 
     def __bool__(self):
@@ -63,23 +82,28 @@ class Game:
         self.running = False
 
 
+size = wi, he = 620, 620
+fps = 60
+screen = pygame.display.set_mode(size)
+pygame.display.set_caption("Игре нужно название")
+ex = Game(size, fps)
+clock = pygame.time.Clock()
+all_sprites = pygame.sprite.Group()
+
 if __name__ == '__main__':
-    pygame.init()
-    size = wi, he = 620, 620
-    screen = pygame.display.set_mode(size)
-    pygame.display.set_caption("Игре нужно название")
-    fps = 60
-    ex = Game(size, fps)
-    clock = pygame.time.Clock()
     while ex:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 ex.quit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 ex.get_click(event.pos)
+
         ex.render()
-        clock.tick(fps)
         screen.fill(pygame.Color(0, 0, 0))
         screen.blit(ex.screen, (0, 0))
+        all_sprites.draw(screen)
+        all_sprites.update(event)
         pygame.display.flip()
+
+        clock.tick(fps)
     pygame.quit()
