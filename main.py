@@ -3,6 +3,19 @@ import os
 import sys
 
 pygame.init()
+SIZE = WI, HE = 620, 620
+FPS = 60
+TILE_S = 60
+screen = pygame.display.set_mode(SIZE)
+pygame.display.set_caption("Игре нужно название")
+clock = pygame.time.Clock()
+
+
+def load_level(filename):
+    filename = "maps/" + filename
+    with open(filename, "r", encoding="utf8") as mapFile:
+        level_map = [line.strip() for line in mapFile]
+    return list(map(lambda x: x.ljust(10, "."), level_map))
 
 
 def load_image(name, colorkey=None):
@@ -20,45 +33,57 @@ def load_image(name, colorkey=None):
     return image
 
 
+tile_images = {
+    'wall': load_image('box.png'),
+    'empty': load_image('grass.png')
+}
+player_image = load_image('mar.png')
+
+all_sprites = pygame.sprite.Group()
+tiles_group = pygame.sprite.Group()
+player_group = pygame.sprite.Group()
+block_group = pygame.sprite.Group()
+
+
+class Tile(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        if tile_type == "wall":
+            super().__init__(block_group, all_sprites)
+        else:
+            super().__init__(tiles_group, all_sprites)
+        self.image = tile_images[tile_type]
+        self.rect = self.image.get_rect().move(
+            TILE_S * pos_x+10, TILE_S * pos_y+10)
+
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(player_group, all_sprites)
+        self.image = player_image
+        self.rect = self.image.get_rect().move(
+            TILE_S * pos_x+10, TILE_S * pos_y+10)
+
+
 class Board:
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-        self.board = [[0] * width for _ in range(height)]
-        self.left = 10
-        self.top = 10
-        self.cell_size = 60
+    def __init__(self):
+        self.cell_size = TILE_S
+        self.player = None
 
-    def set_view(self, left, top, cell_size):
-        self.left = left
-        self.top = top
-        self.cell_size = cell_size
-
-    def render(self, Screen):
-        Screen.fill(pygame.Color(0, 0, 0))
-        col = pygame.Color(255, 255, 255)
-        left, top = self.left, self.top
-        size = self.cell_size
-        for i in range(len(self.board)):
-            for j in range(len(self.board[0])):
-                pygame.draw.rect(Screen, col, (left + size * j, top + size * i, size, size), 1)
-
-    def get_click(self, mouse_pos):
-        cell = self.get_cell(mouse_pos)
-        self.on_click(cell)
-
-    def get_cell(self, pos):
-        left, top = self.left, self.top
-        size = self.cell_size
-        x = (pos[0] - left) // size
-        y = (pos[1] - top) // size
-        if (len(self.board[0]) - 1 < x or x < 0) \
-                or (len(self.board) - 1 < y or y < 0):
-            return None
-        return x, y
-
-    def on_click(self, cell):
-        pass
+    def load_map(self, filename="map0_0.txt"):
+        board = load_level(filename)
+        x, y = None, None
+        for y in range(len(board)):
+            for x in range(len(board[y])):
+                if board[y][x] == '.':
+                    Tile('empty', x, y)
+                elif board[y][x] == '#':
+                    Tile('wall', x, y)
+                elif board[y][x] == '@':
+                    Tile('empty', x, y)
+                    if not self.player:
+                        self.player = Player(x, y)
+                    else:
+                        self.player.rect.x, self.player.rect.y = x, y
 
 
 class Game:
@@ -67,13 +92,8 @@ class Game:
         self.size = self.wi, self.he = Size
         self.screen = pygame.Surface(self.size)
         self.fps = Fps
-        self.board = Board(10, 10)
-
-    def render(self):
-        self.board.render(self.screen)
-
-    def get_click(self, pos):
-        self.board.get_click(pos)
+        self.board = Board()
+        self.board.load_map()
 
     def __bool__(self):
         return self.running
@@ -82,28 +102,24 @@ class Game:
         self.running = False
 
 
-size = wi, he = 620, 620
-fps = 60
-screen = pygame.display.set_mode(size)
-pygame.display.set_caption("Игре нужно название")
-ex = Game(size, fps)
-clock = pygame.time.Clock()
-all_sprites = pygame.sprite.Group()
-
 if __name__ == '__main__':
+    ex = Game(SIZE, FPS)
     while ex:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 ex.quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                ex.get_click(event.pos)
 
-        ex.render()
-        screen.fill(pygame.Color(0, 0, 0))
-        screen.blit(ex.screen, (0, 0))
-        all_sprites.draw(screen)
+        ex.screen.fill(pygame.Color(0, 0, 0))
+        all_sprites.draw(ex.screen)
+        tiles_group.draw(ex.screen)
+        player_group.draw(ex.screen)
+        block_group.draw(ex.screen)
         all_sprites.update(event)
+        tiles_group.update(event)
+        player_group.update(event)
+        block_group.update(event)
+        screen.blit(ex.screen, (0, 0))
         pygame.display.flip()
 
-        clock.tick(fps)
+        clock.tick(FPS)
     pygame.quit()
