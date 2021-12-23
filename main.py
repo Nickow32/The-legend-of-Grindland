@@ -10,7 +10,7 @@ screen = pygame.display.set_mode(SIZE)
 pygame.display.set_caption("Игре нужно название")
 clock = pygame.time.Clock()
 
-
+# функция для загрузки изображения
 def load_level(filename):
     filename = "maps/" + filename
     with open(filename, "r", encoding="utf8") as mapFile:
