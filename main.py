@@ -2,13 +2,14 @@ import pygame
 import os
 import sys
 
-from Sprites import Tile, Player
-
+from Sprites import *
 
 pygame.init()
 SIZE = WI, HE = 620, 620
 FPS = 60
 TILE_S = 60
+PLAYER = None
+FIGHT = False
 screen = pygame.display.set_mode(SIZE)
 pygame.display.set_caption("Игре нужно название")
 clock = pygame.time.Clock()
@@ -37,12 +38,6 @@ tile_images = {
 }
 player_image = load_image('mar.png')
 
-all_sprites = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
-block_group = pygame.sprite.Group()
-enemy_group = pygame.sprite.Group()
-
 
 def load_level(filename):
     # Функция загрузки уровня из тхт файла
@@ -55,21 +50,23 @@ def load_level(filename):
 def load_map(filename="map0_0.txt"):
     # Функия загрузки уровня на экран
     board = load_level(filename)
-    player, x, y = None, None, None
+    x, y = None, None
+    global PLAYER
     for y in range(len(board)):
         for x in range(len(board[y])):
             if board[y][x] == '.':
-                Tile(x, y, tile_images['empty'], all_sprites, tiles_group)
+                Tile(x, y, tile_images['empty'], "empty")
             elif board[y][x] == 'E':
-                Tile(x, y, tile_images['enemy'], all_sprites, enemy_group)
+                Tile(x, y, tile_images['empty'], "empty")
+                Enemy(x, y, tile_images['enemy'])
             elif board[y][x] == '#':
-                Tile(x, y, tile_images['wall'], all_sprites, block_group)
+                Tile(x, y, tile_images['wall'], "wall")
             elif board[y][x] == '@':
-                Tile(x, y, tile_images['empty'], all_sprites, tiles_group)
-                if not player:
-                    player = Player(x, y, player_image, all_sprites, player_group)
+                Tile(x, y, tile_images['empty'], "empty")
+                if not PLAYER:
+                    PLAYER = Player(x, y, player_image)
                 else:
-                    player.rect.x, player.rect.y = x, y
+                    PLAYER.rect.x, PLAYER.rect.y = x, y
 
 
 class FightScreen:
@@ -78,18 +75,36 @@ class FightScreen:
 
 if __name__ == '__main__':
     ex = FightScreen()
-    fighting, running = False, True
     load_map()
+    running = False if not PLAYER else True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    PLAYER.move(0, -1)
+                    if PLAYER.rect.y < 0:
+                        PLAYER.move(0, 1)
+                if event.key == pygame.K_DOWN:
+                    PLAYER.move(0, 1)
+                    if PLAYER.rect.y > 600:
+                        PLAYER.move(0, -1)
+                if event.key == pygame.K_LEFT:
+                    PLAYER.move(-1, 0)
+                    if PLAYER.rect.x < 0:
+                        PLAYER.move(1, 0)
+                if event.key == pygame.K_RIGHT:
+                    PLAYER.move(1, 0)
+                    if PLAYER.rect.x > 600:
+                        PLAYER.move(-1, 0)
         screen.fill(pygame.Color(0, 0, 0))
         all_sprites.draw(screen)
-        all_sprites.update(event)
+        all_sprites.update()
+        enemy_group.update()
         player_group.draw(screen)
-        if fighting:
-            pass
+        if FIGHT:
+            print("Ну начадся бой и что?")
         pygame.display.flip()
         clock.tick(FPS)
     pygame.quit()
