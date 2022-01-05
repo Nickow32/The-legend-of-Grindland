@@ -5,11 +5,10 @@ import sys
 from Sprites import *
 
 pygame.init()
-SIZE = WI, HE = 620, 620
+SIZE = WI, HE = 600, 600
 FPS = 60
 TILE_S = 60
 PLAYER = None
-FIGHT = False
 screen = pygame.display.set_mode(SIZE)
 pygame.display.set_caption("Игре нужно название")
 clock = pygame.time.Clock()
@@ -32,11 +31,11 @@ def load_image(name, colorkey=None):
 
 
 tile_images = {
-    'wall': load_image('box.png'),
-    'enemy': load_image('box.png'),
-    'empty': load_image('grass.png')
+    'wall': pygame.transform.scale(load_image('box.png'), (60, 60)),
+    'enemy': pygame.transform.scale(load_image('box.png'), (60, 60)),
+    'empty': pygame.transform.scale(load_image('grass.png'), (60, 60))
 }
-player_image = load_image('mar.png')
+player_image = pygame.transform.scale(load_image('mar.png'), (60, 60))
 
 
 def load_level(filename):
@@ -70,7 +69,25 @@ def load_map(filename="map0_0.txt"):
 
 
 class FightScreen:
-    pass  # Загатовка на будущее
+    def __init__(self):
+        self.screen = pygame.Surface(SIZE)
+
+        pygame.draw.line(self.screen, pygame.Color(255, 255, 255), (300, 0), (300, 500))
+        pygame.draw.line(self.screen, pygame.Color(255, 255, 255), (0, 500), (600, 500))
+
+        font = pygame.font.Font(None, 30)
+        text = font.render("Attack", True, (255, 100, 125))
+        pygame.draw.rect(self.screen, (75, 75, 75), (0, 500, 150, 100), 5)
+        self.screen.blit(text, (20, 535))
+        text = font.render("Defense", True, (50, 55, 255))
+        pygame.draw.rect(self.screen, (75, 75, 75), (150, 500, 150, 100), 5)
+        self.screen.blit(text, (170, 535))
+        text = font.render("Skills", True, (155, 155, 255))
+        pygame.draw.rect(self.screen, (75, 75, 75), (300, 500, 150, 100), 5)
+        self.screen.blit(text, (320, 535))
+        text = font.render("Items", True, (255, 255, 100))
+        pygame.draw.rect(self.screen, (75, 75, 75), (450, 500, 150, 100), 5)
+        self.screen.blit(text, (470, 535))
 
 
 if __name__ == '__main__':
@@ -78,17 +95,18 @@ if __name__ == '__main__':
     load_map()
     running = False if not PLAYER else True
     while running:
+        from Sprites import FIGHT
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN and not FIGHT:
                 if event.key == pygame.K_UP:
                     PLAYER.move(0, -1)
                     if PLAYER.rect.y < 0:
                         PLAYER.move(0, 1)
                 if event.key == pygame.K_DOWN:
                     PLAYER.move(0, 1)
-                    if PLAYER.rect.y > 600:
+                    if PLAYER.rect.y >= 600:
                         PLAYER.move(0, -1)
                 if event.key == pygame.K_LEFT:
                     PLAYER.move(-1, 0)
@@ -96,15 +114,14 @@ if __name__ == '__main__':
                         PLAYER.move(1, 0)
                 if event.key == pygame.K_RIGHT:
                     PLAYER.move(1, 0)
-                    if PLAYER.rect.x > 600:
+                    if PLAYER.rect.x >= 600:
                         PLAYER.move(-1, 0)
         screen.fill(pygame.Color(0, 0, 0))
         all_sprites.draw(screen)
         all_sprites.update()
-        enemy_group.update()
         player_group.draw(screen)
         if FIGHT:
-            print("Ну начадся бой и что?")
+            screen.blit(ex.screen, (0, 0))
         pygame.display.flip()
         clock.tick(FPS)
     pygame.quit()
