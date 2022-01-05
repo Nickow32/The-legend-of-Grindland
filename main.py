@@ -3,6 +3,7 @@ import os
 import sys
 
 from Sprites import *
+from Fight import FightScreen
 
 pygame.init()
 SIZE = WI, HE = 600, 600
@@ -66,28 +67,6 @@ def load_map(filename="map0_0.txt"):
                     PLAYER = Player(x, y, player_image)
                 else:
                     PLAYER.rect.x, PLAYER.rect.y = x, y
-
-
-class FightScreen:
-    def __init__(self):
-        self.screen = pygame.Surface(SIZE)
-
-        pygame.draw.line(self.screen, pygame.Color(255, 255, 255), (300, 0), (300, 500))
-        pygame.draw.line(self.screen, pygame.Color(255, 255, 255), (0, 500), (600, 500))
-
-        font = pygame.font.Font(None, 30)
-        text = font.render("Attack", True, (255, 100, 125))
-        pygame.draw.rect(self.screen, (75, 75, 75), (0, 500, 150, 100), 5)
-        self.screen.blit(text, (20, 535))
-        text = font.render("Defense", True, (50, 55, 255))
-        pygame.draw.rect(self.screen, (75, 75, 75), (150, 500, 150, 100), 5)
-        self.screen.blit(text, (170, 535))
-        text = font.render("Skills", True, (155, 155, 255))
-        pygame.draw.rect(self.screen, (75, 75, 75), (300, 500, 150, 100), 5)
-        self.screen.blit(text, (320, 535))
-        text = font.render("Items", True, (255, 255, 100))
-        pygame.draw.rect(self.screen, (75, 75, 75), (450, 500, 150, 100), 5)
-        self.screen.blit(text, (470, 535))
 
 
 if __name__ == '__main__':
