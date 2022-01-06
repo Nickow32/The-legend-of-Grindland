@@ -2,14 +2,13 @@ import pygame
 import os
 import sys
 
-from Sprites import *
+from Sprites import Tile, Enemy, Player, all_sprites, player_group
 from Fight import FightScreen
 
 pygame.init()
 SIZE = WI, HE = 600, 600
 FPS = 60
 TILE_S = 60
-PLAYER = None
 screen = pygame.display.set_mode(SIZE)
 pygame.display.set_caption("Игре нужно название")
 clock = pygame.time.Clock()
@@ -38,6 +37,8 @@ tile_images = {
 }
 player_image = pygame.transform.scale(load_image('mar.png'), (60, 60))
 
+PLAYER = Player(0, 0, player_image)
+
 
 def load_level(filename):
     # Функция загрузки уровня из тхт файла
@@ -63,10 +64,7 @@ def load_map(filename="map0_0.txt"):
                 Tile(x, y, tile_images['wall'], "wall")
             elif board[y][x] == '@':
                 Tile(x, y, tile_images['empty'], "empty")
-                if not PLAYER:
-                    PLAYER = Player(x, y, player_image)
-                else:
-                    PLAYER.rect.x, PLAYER.rect.y = x, y
+                PLAYER.rect.x, PLAYER.rect.y = x * TILE_S, y * TILE_S
 
 
 if __name__ == '__main__':
@@ -95,11 +93,13 @@ if __name__ == '__main__':
                     PLAYER.move(1, 0)
                     if PLAYER.rect.x >= 600:
                         PLAYER.move(-1, 0)
-        screen.fill(pygame.Color(0, 0, 0))
+        screen.fill(pygame.Color(0))
         all_sprites.draw(screen)
         all_sprites.update()
         player_group.draw(screen)
         if FIGHT:
+            from Sprites import ENEMYES, ENEMYES_HP, HEROES, HEROES_HP
+            ex.draw(ENEMYES)
             screen.blit(ex.screen, (0, 0))
         pygame.display.flip()
         clock.tick(FPS)

@@ -1,7 +1,13 @@
 import pygame
+import sqlite3
+from random import randint
 
 FIGHT = False
 TILE_S = 60
+HEROES = []
+ENEMYES = []
+HEROES_HP = []
+ENEMYES_HP = []
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
@@ -29,9 +35,24 @@ class Enemy(pygame.sprite.Sprite):
 
     def update(self, *args):
         if pygame.sprite.spritecollideany(self, player_group):
-            global FIGHT
-            FIGHT = True
+            self.start_fight()
             self.kill()
+
+    def start_fight(self):
+        global FIGHT, ENEMYES, ENEMYES_HP, HEROES, HEROES_HP
+        FIGHT = True
+        con = sqlite3.connect("Stats.db")
+        cur = con.cursor()
+        res = cur.execute("select * from Heroes").fetchall()
+        for i in res:
+            HEROES.append(i[1:])
+        HEROES_HP = list(map(lambda x: x[1], HEROES))
+        res = cur.execute("select * from Monsters").fetchall()
+        n = randint(1, 5)
+        for i in range(n):
+            ENEMYES.append(res[randint(0, len(res) - 1)][1:])
+        ENEMYES_HP = list(map(lambda x: x[1], ENEMYES))
+        con.close()
 
 
 class Player(pygame.sprite.Sprite):
