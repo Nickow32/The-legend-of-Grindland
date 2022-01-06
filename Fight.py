@@ -6,6 +6,8 @@ SIZE = (600, 600)
 class FightScreen:
     def __init__(self):
         self.screen = pygame.Surface(SIZE)
+        fight_bg = pygame.image.load('Images/Sprite-0001.png')
+        self.screen.blit(fight_bg, fight_bg.get_rect(bottomright=(600, 500)))
 
         pygame.draw.line(self.screen, pygame.Color(255, 255, 255), (300, 0), (300, 500))
         pygame.draw.line(self.screen, pygame.Color(255, 255, 255), (0, 500), (600, 500))
