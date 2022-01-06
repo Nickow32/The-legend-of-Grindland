@@ -8,6 +8,7 @@ HEROES = []
 ENEMYES = []
 HEROES_HP = []
 ENEMYES_HP = []
+QUEUE = []
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
@@ -39,7 +40,7 @@ class Enemy(pygame.sprite.Sprite):
             self.kill()
 
     def start_fight(self):
-        global FIGHT, ENEMYES, ENEMYES_HP, HEROES, HEROES_HP
+        global FIGHT, ENEMYES, ENEMYES_HP, HEROES, HEROES_HP, QUEUE
         FIGHT = True
         con = sqlite3.connect("Stats.db")
         cur = con.cursor()
@@ -52,6 +53,7 @@ class Enemy(pygame.sprite.Sprite):
         for i in range(n):
             ENEMYES.append(res[randint(0, len(res) - 1)][1:])
         ENEMYES_HP = list(map(lambda x: x[1], ENEMYES))
+        QUEUE = sorted(HEROES + ENEMYES, key=lambda x: -x[-2])
         con.close()
 
 

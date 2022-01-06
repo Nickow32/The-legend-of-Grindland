@@ -69,10 +69,12 @@ def load_map(filename="map0_0.txt"):
 
 if __name__ == '__main__':
     ex = FightScreen()
+    cur_motion = 0
     load_map()
     running = False if not PLAYER else True
     while running:
         from Sprites import FIGHT
+        from Sprites import ENEMYES, ENEMYES_HP, HEROES, HEROES_HP, QUEUE
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -93,14 +95,26 @@ if __name__ == '__main__':
                     PLAYER.move(1, 0)
                     if PLAYER.rect.x >= 600:
                         PLAYER.move(-1, 0)
+            if event.type == pygame.KEYDOWN and FIGHT:
+                if event.key == pygame.K_a and QUEUE[cur_motion] in HEROES:
+                    ENEMYES_HP[0] -= QUEUE[cur_motion][2]
+                    print(ENEMYES_HP, sum(ENEMYES_HP))
+                    cur_motion = (cur_motion + 1) % len(QUEUE)
         screen.fill(pygame.Color(0))
         all_sprites.draw(screen)
         all_sprites.update()
         player_group.draw(screen)
         if FIGHT:
-            from Sprites import ENEMYES, ENEMYES_HP, HEROES, HEROES_HP
-            ex.draw(ENEMYES)
+            ex.draw(ENEMYES, HEROES, HEROES_HP)
             screen.blit(ex.screen, (0, 0))
+            print(ENEMYES_HP, sum(ENEMYES_HP), FIGHT)
+            if QUEUE[cur_motion] in ENEMYES:
+                HEROES_HP[0] -= QUEUE[cur_motion][2]
+                cur_motion = (cur_motion + 1) % len(QUEUE)
+            if sum(HEROES_HP) <= 0:
+                running, FIGHT = False, False
+            if sum(ENEMYES_HP) <= 0:
+                FIGHT = False
         pygame.display.flip()
         clock.tick(FPS)
     pygame.quit()
