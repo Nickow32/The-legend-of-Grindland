@@ -2,7 +2,7 @@ import pygame
 import os
 import sys
 
-from Sprites import Tile, Enemy, Player, all_sprites, player_group
+from Sprites import Tile, Enemy, Player, all_sprites, tiles_group, enemy_group, player_group
 from Fight import FightScreen
 
 pygame.init()
@@ -71,10 +71,9 @@ if __name__ == '__main__':
     ex = FightScreen()
     cur_motion = 0
     load_map()
+    FIGHT = False
     running = False if not PLAYER else True
     while running:
-        from Sprites import FIGHT
-        from Sprites import ENEMYES, ENEMYES_HP, HEROES, HEROES_HP, QUEUE
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -95,16 +94,20 @@ if __name__ == '__main__':
                     PLAYER.move(1, 0)
                     if PLAYER.rect.x >= 600:
                         PLAYER.move(-1, 0)
+                enemy_group.update()
+                from Sprites import FIGHT
+                from Sprites import ENEMYES, ENEMYES_HP, HEROES, HEROES_HP, QUEUE
             if event.type == pygame.KEYDOWN and FIGHT:
                 if event.key == pygame.K_a and QUEUE[cur_motion] in HEROES:
                     ENEMYES_HP[0] -= QUEUE[cur_motion][2]
                     print(ENEMYES_HP, sum(ENEMYES_HP))
                     cur_motion = (cur_motion + 1) % len(QUEUE)
         screen.fill(pygame.Color(0))
-        all_sprites.draw(screen)
-        all_sprites.update()
-        player_group.draw(screen)
-        if FIGHT:
+        if not FIGHT:
+            all_sprites.draw(screen)
+            all_sprites.update()
+            player_group.draw(screen)
+        elif FIGHT:
             ex.draw(ENEMYES, HEROES, HEROES_HP)
             screen.blit(ex.screen, (0, 0))
             print(ENEMYES_HP, sum(ENEMYES_HP), FIGHT)

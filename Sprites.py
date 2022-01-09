@@ -26,6 +26,10 @@ class Tile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(
             TILE_S * pos_x, TILE_S * pos_y)
 
+    def update(self, *args):
+        global FIGHT, ENEMYES, ENEMYES_HP, HEROES, HEROES_HP, QUEUE
+        FIGHT, ENEMYES, ENEMYES_HP, HEROES, HEROES_HP, QUEUE = False, [], [], [], [], []
+
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, image):
