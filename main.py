@@ -2,7 +2,8 @@ import pygame
 import os
 import sys
 
-from Sprites import Tile, Enemy, Player, all_sprites, tiles_group, enemy_group, player_group
+from Sprites import Tile, Enemy, Player, \
+    all_sprites, block_group, tiles_group, enemy_group, player_group
 from Fight import FightScreen
 
 pygame.init()
@@ -48,9 +49,13 @@ def load_level(filename):
     return list(map(lambda x: x.ljust(10, "."), level_map))
 
 
-def load_map(filename="map0_0.txt"):
+def load_map(filename="map1_1"):
     # Функия загрузки уровня на экран
-    board = load_level(filename)
+    all_sprites.empty()
+    block_group.empty()
+    enemy_group.empty()
+    tiles_group.empty()
+    board = load_level(filename + '.txt')
     x, y = None, None
     global PLAYER
     for y in range(len(board)):
@@ -70,6 +75,7 @@ def load_map(filename="map0_0.txt"):
 if __name__ == '__main__':
     ex = FightScreen()
     cur_motion = 0
+    cur_map = [1, 1]
     load_map()
     FIGHT = False
     running = False if not PLAYER else True
@@ -81,19 +87,23 @@ if __name__ == '__main__':
                 if event.key == pygame.K_UP:
                     PLAYER.move(0, -1)
                     if PLAYER.rect.y < 0:
-                        PLAYER.move(0, 1)
+                        cur_map[1] -= 1
+                        load_map(f"map{cur_map[0]}_{cur_map[1]}")
                 if event.key == pygame.K_DOWN:
                     PLAYER.move(0, 1)
                     if PLAYER.rect.y >= 600:
-                        PLAYER.move(0, -1)
+                        cur_map[1] += 1
+                        load_map(f"map{cur_map[0]}_{cur_map[1]}")
                 if event.key == pygame.K_LEFT:
                     PLAYER.move(-1, 0)
                     if PLAYER.rect.x < 0:
-                        PLAYER.move(1, 0)
+                        cur_map[0] -= 1
+                        load_map(f"map{cur_map[0]}_{cur_map[1]}")
                 if event.key == pygame.K_RIGHT:
                     PLAYER.move(1, 0)
                     if PLAYER.rect.x >= 600:
-                        PLAYER.move(-1, 0)
+                        cur_map[0] += 1
+                        load_map(f"map{cur_map[0]}_{cur_map[1]}")
                 enemy_group.update()
                 from Sprites import FIGHT
                 from Sprites import ENEMYES, ENEMYES_HP, HEROES, HEROES_HP, QUEUE
