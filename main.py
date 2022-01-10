@@ -70,6 +70,8 @@ def load_map(filename="map0_0.txt"):
 if __name__ == '__main__':
     ex = FightScreen()
     cur_motion = 0
+    cur_attack = 0
+    choosing_enemy = False
     load_map()
     FIGHT = False
     running = False if not PLAYER else True
@@ -78,6 +80,7 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN and not FIGHT:
+                # Осуществление движения героя, вне боя
                 if event.key == pygame.K_UP:
                     PLAYER.move(0, -1)
                     if PLAYER.rect.y < 0:
@@ -97,26 +100,47 @@ if __name__ == '__main__':
                 enemy_group.update()
                 from Sprites import FIGHT
                 from Sprites import ENEMYES, ENEMYES_HP, HEROES, HEROES_HP, QUEUE
+
             if event.type == pygame.KEYDOWN and FIGHT:
-                if event.key == pygame.K_a and QUEUE[cur_motion] in HEROES:
-                    ENEMYES_HP[0] -= QUEUE[cur_motion][2]
-                    print(ENEMYES_HP, sum(ENEMYES_HP))
+                # Осуществление действий героев в бою
+
+                # Осуществление аттаки героев и выбора цели
+                if event.key == pygame.K_a and QUEUE[cur_motion] in HEROES and not choosing_enemy:
+                    choosing_enemy = True
+                if event.key == pygame.K_SPACE and QUEUE[cur_motion] in HEROES and choosing_enemy:
+                    choosing_enemy = False
+                    while ENEMYES_HP[cur_attack] <= 0:
+                        cur_attack = (cur_attack + 1) % len(ENEMYES_HP)
+                    ENEMYES_HP[cur_attack] -= QUEUE[cur_motion][2]
                     cur_motion = (cur_motion + 1) % len(QUEUE)
+                    while ENEMYES_HP[cur_attack] <= 0 and\
+                            len(list(filter(lambda x: x > 0, ENEMYES_HP))):
+                        cur_attack = (cur_attack + 1) % len(ENEMYES_HP)
+                if event.key == pygame.K_DOWN and choosing_enemy:
+                    cur_attack = (cur_attack + 1) % len(ENEMYES_HP)
+                    while ENEMYES_HP[cur_attack] <= 0:
+                        cur_attack = (cur_attack + 1) % len(ENEMYES_HP)
+                if event.key == pygame.K_UP and choosing_enemy:
+                    cur_attack = (cur_attack - 1) % len(ENEMYES_HP)
+                    while ENEMYES_HP[cur_attack] <= 0:
+                        cur_attack = (cur_attack - 1) % len(ENEMYES_HP)
+
         screen.fill(pygame.Color(0))
         if not FIGHT:
+            cur_motion = 0
+            cur_attack = 0
             all_sprites.draw(screen)
             all_sprites.update()
             player_group.draw(screen)
         elif FIGHT:
-            ex.draw(ENEMYES, HEROES, HEROES_HP)
+            ex.draw(ENEMYES, ENEMYES_HP, HEROES, HEROES_HP, cur_attack, choosing_enemy)
             screen.blit(ex.screen, (0, 0))
-            print(ENEMYES_HP, sum(ENEMYES_HP), FIGHT)
             if QUEUE[cur_motion] in ENEMYES:
                 HEROES_HP[0] -= QUEUE[cur_motion][2]
                 cur_motion = (cur_motion + 1) % len(QUEUE)
-            if sum(HEROES_HP) <= 0:
+            if len(list(filter(lambda x: x > 0, HEROES_HP))) == 0:
                 running, FIGHT = False, False
-            if sum(ENEMYES_HP) <= 0:
+            if len(list(filter(lambda x: x > 0, ENEMYES_HP))) == 0:
                 FIGHT = False
         pygame.display.flip()
         clock.tick(FPS)
