@@ -87,7 +87,7 @@ if __name__ == '__main__':
                         PLAYER.move(0, 1)
                 if event.key == pygame.K_DOWN:
                     PLAYER.move(0, 1)
-                    if PLAYER.rect.y >= 600:
+                    if PLAYER.rect.y >= 660:
                         PLAYER.move(0, -1)
                 if event.key == pygame.K_LEFT:
                     PLAYER.move(-1, 0)
@@ -95,7 +95,7 @@ if __name__ == '__main__':
                         PLAYER.move(1, 0)
                 if event.key == pygame.K_RIGHT:
                     PLAYER.move(1, 0)
-                    if PLAYER.rect.x >= 600:
+                    if PLAYER.rect.x >= 660:
                         PLAYER.move(-1, 0)
                 enemy_group.update()
                 from Sprites import FIGHT
