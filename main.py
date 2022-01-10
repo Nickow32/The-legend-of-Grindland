@@ -6,9 +6,9 @@ from Sprites import Tile, Enemy, Player, all_sprites, tiles_group, enemy_group, 
 from Fight import FightScreen
 
 pygame.init()
-SIZE = WI, HE = 600, 600
+SIZE = WI, HE = 660, 660
 FPS = 60
-TILE_S = 60
+TILE_S = 66
 screen = pygame.display.set_mode(SIZE)
 pygame.display.set_caption("Игре нужно название")
 clock = pygame.time.Clock()
@@ -31,11 +31,11 @@ def load_image(name, colorkey=None):
 
 
 tile_images = {
-    'wall': pygame.transform.scale(load_image('box.png'), (60, 60)),
-    'enemy': pygame.transform.scale(load_image('box.png'), (60, 60)),
-    'empty': pygame.transform.scale(load_image('grass.png'), (60, 60))
+    'wall': pygame.transform.scale(load_image('box.png'), (66, 66)),
+    'enemy': pygame.transform.scale(load_image('box.png'), (66, 66)),
+    'empty': pygame.transform.scale(load_image('grass.png'), (66, 66))
 }
-player_image = pygame.transform.scale(load_image('mar.png'), (60, 60))
+player_image = pygame.transform.scale(load_image('mar.png'), (66, 66))
 
 PLAYER = Player(0, 0, player_image)
 

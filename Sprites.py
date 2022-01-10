@@ -3,7 +3,7 @@ import sqlite3
 from random import randint
 
 FIGHT = False
-TILE_S = 60
+TILE_S = 66
 HEROES = []
 ENEMYES = []
 HEROES_HP = []
