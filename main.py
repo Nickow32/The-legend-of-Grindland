@@ -2,6 +2,7 @@ import pygame
 import os
 import sys
 
+from random import randint
 from Sprites import Tile, Enemy, Player, \
     all_sprites, block_group, tiles_group, enemy_group, player_group
 from Fight import FightScreen
@@ -81,6 +82,7 @@ if __name__ == '__main__':
     load_map()
     FIGHT = False
     running = False if not PLAYER else True
+    Heroes_Status = ["N/a", "N/a", "N/a", "N/a"]
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -107,21 +109,26 @@ if __name__ == '__main__':
                     if PLAYER.rect.x >= 660:
                         cur_map[0] += 1
                         load_map(f"map{cur_map[0]}_{cur_map[1]}")
+                # вызов функции врагов, начинающей бой
                 enemy_group.update()
+                # импорт статусов врагов, героев и переменной боя
                 from Sprites import FIGHT
                 from Sprites import ENEMYES, ENEMYES_HP, HEROES, HEROES_HP, QUEUE
+                # обнуление статуса героев
+                Heroes_Status = ["N/a", "N/a", "N/a", "N/a"]
 
             if event.type == pygame.KEYDOWN and FIGHT:
                 # Осуществление действий героев в бою
 
-                # Осуществление аттаки героев и выбора цели
+                # Аттака героев
                 if event.key == pygame.K_a and QUEUE[cur_motion] in HEROES and not choosing_enemy:
                     choosing_enemy = True
                 if event.key == pygame.K_SPACE and QUEUE[cur_motion] in HEROES and choosing_enemy:
                     choosing_enemy = False
                     while ENEMYES_HP[cur_attack] <= 0:
                         cur_attack = (cur_attack + 1) % len(ENEMYES_HP)
-                    ENEMYES_HP[cur_attack] -= QUEUE[cur_motion][2]
+                    ENEMYES_HP[cur_attack] = ENEMYES_HP[cur_attack] \
+                                             - (QUEUE[cur_motion][2] - ENEMYES[cur_attack][3])
                     cur_motion = (cur_motion + 1) % len(QUEUE)
                     while ENEMYES_HP[cur_attack] <= 0 and\
                             len(list(filter(lambda x: x > 0, ENEMYES_HP))):
@@ -134,20 +141,41 @@ if __name__ == '__main__':
                     cur_attack = (cur_attack - 1) % len(ENEMYES_HP)
                     while ENEMYES_HP[cur_attack] <= 0:
                         cur_attack = (cur_attack - 1) % len(ENEMYES_HP)
+                if event.key == pygame.K_ESCAPE and choosing_enemy:
+                    choosing_enemy = False
+
+                # Защита героев
+                if event.key == pygame.K_d and QUEUE[cur_motion] in HEROES:
+                    Heroes_Status[HEROES.index(QUEUE[cur_motion])] = ["def", 1]
+                    cur_motion = (cur_motion + 1) % len(QUEUE)
 
         screen.fill(pygame.Color(0))
         if not FIGHT:
+            # Обработка карты
             cur_motion = 0
             cur_attack = 0
             all_sprites.draw(screen)
             all_sprites.update()
             player_group.draw(screen)
+            player_group.update()
         elif FIGHT:
-            ex.draw(ENEMYES, ENEMYES_HP, HEROES, HEROES_HP, cur_attack, choosing_enemy)
+            # Обработка боя
+            ex.draw(ENEMYES, ENEMYES_HP, HEROES, HEROES_HP,
+                    cur_attack, QUEUE[cur_motion], choosing_enemy)
             screen.blit(ex.screen, (0, 0))
+
+            # Аттака монстров
             if QUEUE[cur_motion] in ENEMYES:
-                HEROES_HP[0] -= QUEUE[cur_motion][2]
+                ind = randint(0, 3)
+                if Heroes_Status[ind][0] == 'def':
+                    HEROES_HP[ind] = HEROES_HP[ind] - (QUEUE[cur_motion][2] - HEROES[ind][3] * 1.5)
+                    Heroes_Status[ind][1] -= 1
+                    if Heroes_Status[ind][1] == 0:
+                        Heroes_Status[ind] = "N/a"
+                else:
+                    HEROES_HP[ind] = HEROES_HP[ind] - (QUEUE[cur_motion][2] - HEROES[ind][3])
                 cur_motion = (cur_motion + 1) % len(QUEUE)
+            # Проверка победа или поражение
             if len(list(filter(lambda x: x > 0, HEROES_HP))) == 0:
                 running, FIGHT = False, False
             if len(list(filter(lambda x: x > 0, ENEMYES_HP))) == 0:

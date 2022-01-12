@@ -16,6 +16,7 @@ block_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 
 
+# Классы спрайтов и их функции
 class Tile(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, image, type):
         if type == "wall":

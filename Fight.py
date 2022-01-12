@@ -3,11 +3,13 @@ import pygame
 SIZE = (660, 660)
 
 
+# Класс отрисовки поля боя
 class FightScreen:
     def __init__(self):
         self.screen = pygame.Surface(SIZE)
 
-    def draw(self, Enemys, Enemys_Hp, Heroes, Heroes_Hp, cur, choosing=False):
+    def draw(self, Enemys, Enemys_Hp, Heroes, Heroes_Hp, cur, cur_m, choosing=False):
+        print(cur_m)
         # Отрисовка поля боя
         self.screen.fill(pygame.Color(50))
         font = pygame.font.Font(None, 25)
@@ -55,7 +57,7 @@ class FightScreen:
             cnt = 0
             for i in range(1, len(s) + 1):
                 text = font.render(", ".join(s[n:i]), True, (255, 0, 0))
-                if text.get_width() > 510:
+                if text.get_width() > 500:
                     text = font.render(", ".join(s[n:i - 1]), True, (255, 0, 0))
                     self.screen.blit(text, (160, 585 + 25 * cnt))
                     cnt += 1
@@ -73,6 +75,18 @@ class FightScreen:
         for i in range(4):
             cof = 500 if i % 2 else 400
             pygame.draw.rect(self.screen, (75, 155, 255), (cof, 80 * i + 120, 95, 95))
+        if cur_m in Heroes:
+            i = Heroes.index(cur_m)
+            cof = 500 if i % 2 else 400
+            y = 80 * i + 120
+            Points = [(cof + 19, y - 40), (cof + 48, y), (cof + 76, y - 40)]
+            pygame.draw.polygon(self.screen, (255, 255, 0), Points)
+        else:
+            i = Enemys.index(cur_m)
+            cof = 120 if i % 2 else 20
+            y = 95 * i + 80
+            Points = [(cof + 19, y - 40), (cof + 48, y), (cof + 76, y - 40)]
+            pygame.draw.polygon(self.screen, (255, 255, 0), Points)
         if choosing:
             return
         for i in range(len(Heroes_Hp)):
