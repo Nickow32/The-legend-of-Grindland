@@ -9,7 +9,6 @@ class FightScreen:
         self.screen = pygame.Surface(SIZE)
 
     def draw(self, Enemys, Enemys_Hp, Heroes, Heroes_Hp, cur, cur_m, choosing=False):
-        print(cur_m)
         # Отрисовка поля боя
         self.screen.fill(pygame.Color(50))
         font = pygame.font.Font(None, 25)
