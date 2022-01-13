@@ -1,3 +1,5 @@
+import sqlite3
+
 import pygame
 import os
 import sys
@@ -72,15 +74,27 @@ def load_map(filename="map1_1"):
                 Tile(x, y, tile_images['empty'], "empty")
                 PLAYER.rect.x, PLAYER.rect.y = x * TILE_S, y * TILE_S
 
+con = sqlite3.connect("Stats.db")
+cur = con.cursor()
+s = 'select * from skills'
+res = cur.execute(s).fetchall()
+print(res)
+con.close()
+
 
 if __name__ == '__main__':
     ex = FightScreen()
     cur_motion = 0
     cur_map = [1, 1]
     cur_attack = 0
+    cur_skill = 0
     choosing_enemy = False
+    ch_s = False
     load_map()
     FIGHT = False
+    Level = 1
+    EXP = [0, 500]
+    Boss = 1
     running = False if not PLAYER else True
     Heroes_Status = ["N/a", "N/a", "N/a", "N/a"]
     while running:
@@ -149,6 +163,18 @@ if __name__ == '__main__':
                     Heroes_Status[HEROES.index(QUEUE[cur_motion])] = ["def", 1]
                     cur_motion = (cur_motion + 1) % len(QUEUE)
 
+                # Навыки героеев
+                if event.key == pygame.K_s and QUEUE[cur_motion] in HEROES:
+                    ch_s = True
+                if event.key == pygame.K_DOWN and QUEUE[cur_motion] in HEROES and ch_s:
+                    ch_s = True
+                if event.key == pygame.K_UP and QUEUE[cur_motion] in HEROES and ch_s:
+                    ch_s = True
+                if event.key == pygame.K_SPACE and QUEUE[cur_motion] in HEROES and ch_s:
+                    ch_s = True
+                if event.key == pygame.K_ESCAPE and ch_s:
+                    ch_s = False
+
         screen.fill(pygame.Color(0))
         if not FIGHT:
             # Обработка карты
@@ -161,7 +187,7 @@ if __name__ == '__main__':
         elif FIGHT:
             # Обработка боя
             ex.draw(ENEMYES, ENEMYES_HP, HEROES, HEROES_HP,
-                    cur_attack, QUEUE[cur_motion], choosing_enemy)
+                    cur_attack, QUEUE[cur_motion], choosing_enemy, ch_s)
             screen.blit(ex.screen, (0, 0))
 
             # Аттака монстров
@@ -175,10 +201,16 @@ if __name__ == '__main__':
                 else:
                     HEROES_HP[ind] = HEROES_HP[ind] - (QUEUE[cur_motion][2] - HEROES[ind][3])
                 cur_motion = (cur_motion + 1) % len(QUEUE)
+
             # Проверка победа или поражение
             if len(list(filter(lambda x: x > 0, HEROES_HP))) == 0:
                 running, FIGHT = False, False
             if len(list(filter(lambda x: x > 0, ENEMYES_HP))) == 0:
+                EXP[0] += 25 * sum(list(map(lambda x: x[-1], ENEMYES)))
+                if EXP[0] >= EXP[1]:
+                    EXP[0] -= EXP[1]
+                    EXP[1] *= 1.5
+                    Level += 1
                 FIGHT = False
         pygame.display.flip()
         clock.tick(FPS)

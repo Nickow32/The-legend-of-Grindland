@@ -1,4 +1,5 @@
 import pygame
+import sqlite3
 
 SIZE = (660, 660)
 
@@ -8,7 +9,7 @@ class FightScreen:
     def __init__(self):
         self.screen = pygame.Surface(SIZE)
 
-    def draw(self, Enemys, Enemys_Hp, Heroes, Heroes_Hp, cur, cur_m, choosing=False):
+    def draw(self, Enemys, Enemys_Hp, Heroes, Heroes_Hp, cur, cur_m, choosing=False, ch_s=False):
         # Отрисовка поля боя
         self.screen.fill(pygame.Color(50))
         font = pygame.font.Font(None, 25)
@@ -17,37 +18,15 @@ class FightScreen:
         self.screen.blit(fight_bg, fight_bg.get_rect(bottomright=(660, 560)))
 
         text = font.render("A Атака", True, (255, 100, 125))
-        pygame.draw.rect(self.screen, (75, 75, 75), (0, 560, 150, 25), 5)
+        pygame.draw.rect(self.screen, (75, 75, 75), (0, 560, 150, 33), 5)
         self.screen.blit(text, (10, 560))
-        text = font.render("S Умение", True, (155, 155, 255))
-        pygame.draw.rect(self.screen, (75, 75, 75), (0, 585, 150, 25), 5)
-        self.screen.blit(text, (10, 585))
+        text = font.render("S Умения", True, (155, 155, 255))
+        pygame.draw.rect(self.screen, (75, 75, 75), (0, 593, 150, 33), 5)
+        self.screen.blit(text, (10, 593))
         text = font.render("D Зацита", True, (50, 55, 255))
-        pygame.draw.rect(self.screen, (75, 75, 75), (0, 610, 150, 25), 5)
-        self.screen.blit(text, (10, 610))
-        text = font.render("F Предметы", True, (255, 255, 100))
-        pygame.draw.rect(self.screen, (75, 75, 75), (0, 635, 150, 25), 5)
-        self.screen.blit(text, (10, 635))
-        if not choosing:
-            text = font.render("Дантэ", True, (255, 0, 0))
-            pygame.draw.rect(self.screen, (75, 75, 75), (150, 560, 510, 25), 5)
-            self.screen.blit(text, (160, 560))
-            text = font.render("Левап", True, (155, 0, 155))
-            pygame.draw.rect(self.screen, (75, 75, 75), (150, 585, 510, 25), 5)
-            self.screen.blit(text, (160, 585))
-            text = font.render("Ашадия", True, (255, 255, 100))
-            pygame.draw.rect(self.screen, (75, 75, 75), (150, 610, 510, 25), 5)
-            self.screen.blit(text, (160, 610))
-            text = font.render("Лилиан", True, (100, 255, 255))
-            pygame.draw.rect(self.screen, (75, 75, 75), (150, 635, 510, 25), 5)
-            self.screen.blit(text, (160, 635))
-
-            text = font.render("ОЗ", True, (0, 255, 0))
-            self.screen.blit(text, (320, 560))
-            self.screen.blit(text, (320, 585))
-            self.screen.blit(text, (320, 610))
-            self.screen.blit(text, (320, 635))
-        else:
+        pygame.draw.rect(self.screen, (75, 75, 75), (0, 626, 150, 34), 5)
+        self.screen.blit(text, (10, 626))
+        if choosing:
             text = font.render("Выберите противника", True, (255, 0, 0))
             self.screen.blit(text, (260, 560))
             s = [f'{i + 1} ' + Enemys[i][0] + f' {Enemys_Hp[i] if Enemys_Hp[i] > 0 else 0}'
@@ -66,6 +45,37 @@ class FightScreen:
             text = font.render(f"Текущая цель: противник номер {cur + 1}", True, (255, 0, 0))
             self.screen.blit(text, (160, 635))
             pygame.draw.rect(self.screen, (75, 75, 75), (150, 560, 510, 100), 5)
+        elif ch_s:
+            text = font.render("Выберите Навык", True, (100, 255, 0))
+            self.screen.blit(text, (260, 560))
+            con = sqlite3.connect("Stats.db")
+            curs = con.cursor()
+            print(Heroes)
+            s = f"select * from Skills where classId =" \
+                f" (select id from Classes where name = '{Heroes[Heroes.index(cur)][0]}')"
+            res = curs.execute(s).fetchall()
+            print(res)
+            con.close()
+            pygame.draw.rect(self.screen, (75, 75, 75), (150, 560, 510, 100), 5)
+        else:
+            text = font.render("Дантэ", True, (255, 0, 0))
+            pygame.draw.rect(self.screen, (75, 75, 75), (150, 560, 510, 25), 5)
+            self.screen.blit(text, (160, 560))
+            text = font.render("Левап", True, (155, 0, 155))
+            pygame.draw.rect(self.screen, (75, 75, 75), (150, 585, 510, 25), 5)
+            self.screen.blit(text, (160, 585))
+            text = font.render("Ашадия", True, (255, 255, 100))
+            pygame.draw.rect(self.screen, (75, 75, 75), (150, 610, 510, 25), 5)
+            self.screen.blit(text, (160, 610))
+            text = font.render("Лилиан", True, (100, 255, 255))
+            pygame.draw.rect(self.screen, (75, 75, 75), (150, 635, 510, 25), 5)
+            self.screen.blit(text, (160, 635))
+
+            text = font.render("ОЗ", True, (0, 255, 0))
+            self.screen.blit(text, (320, 560))
+            self.screen.blit(text, (320, 585))
+            self.screen.blit(text, (320, 610))
+            self.screen.blit(text, (320, 635))
 
         for i in range(len(Enemys)):
             if Enemys_Hp[i] > 0:
