@@ -74,13 +74,16 @@ def load_map(filename="map1_1"):
                 Tile(x, y, tile_images['empty'], "empty")
                 PLAYER.rect.x, PLAYER.rect.y = x * TILE_S, y * TILE_S
 
+SKILLS = {}
 con = sqlite3.connect("Stats.db")
 cur = con.cursor()
 s = 'select * from skills'
 res = cur.execute(s).fetchall()
-print(res)
+for i in res:
+    li = SKILLS.get(i[2], [])
+    li.append([i[1]] + list(i[3:]))
+    SKILLS[i[2]] = li
 con.close()
-
 
 if __name__ == '__main__':
     ex = FightScreen()
@@ -135,7 +138,8 @@ if __name__ == '__main__':
                 # Осуществление действий героев в бою
 
                 # Аттака героев
-                if event.key == pygame.K_a and QUEUE[cur_motion] in HEROES and not choosing_enemy:
+                if event.key == pygame.K_a and QUEUE[cur_motion] in HEROES \
+                        and not choosing_enemy and not ch_s:
                     choosing_enemy = True
                 if event.key == pygame.K_SPACE and QUEUE[cur_motion] in HEROES and choosing_enemy:
                     choosing_enemy = False
@@ -159,19 +163,36 @@ if __name__ == '__main__':
                     choosing_enemy = False
 
                 # Защита героев
-                if event.key == pygame.K_d and QUEUE[cur_motion] in HEROES:
+                if event.key == pygame.K_d and QUEUE[cur_motion] in HEROES\
+                        and not choosing_enemy and not ch_s:
                     Heroes_Status[HEROES.index(QUEUE[cur_motion])] = ["def", 1]
                     cur_motion = (cur_motion + 1) % len(QUEUE)
 
-                # Навыки героеев
-                if event.key == pygame.K_s and QUEUE[cur_motion] in HEROES:
+                # Навыки героев
+                if event.key == pygame.K_s and QUEUE[cur_motion] in HEROES\
+                        and not choosing_enemy and not ch_s:
                     ch_s = True
                 if event.key == pygame.K_DOWN and QUEUE[cur_motion] in HEROES and ch_s:
                     ch_s = True
                 if event.key == pygame.K_UP and QUEUE[cur_motion] in HEROES and ch_s:
                     ch_s = True
                 if event.key == pygame.K_SPACE and QUEUE[cur_motion] in HEROES and ch_s:
-                    ch_s = True
+                    skill = SKILLS[QUEUE[cur_motion][-1]][cur_skill]
+                    if skill[-1] == 0:
+                        continue
+                    skill[-1] -= 1
+                    while ENEMYES_HP[cur_attack] <= 0 and\
+                            len(list(filter(lambda x: x > 0, ENEMYES_HP))):
+                        cur_attack = (cur_attack + 1) % len(ENEMYES_HP)
+                    if skill[2] == "Damage":
+                        ENEMYES_HP[cur_attack] -= QUEUE[cur_motion][2] * skill[-2]
+                    elif skill[2] == "DamageAOE":
+                        for i in range(len(ENEMYES_HP)):
+                            ENEMYES_HP[i] -= QUEUE[cur_motion][2] * skill[-2]
+                    elif skill[2] == "Buff":
+                        pass
+                    ch_s = False
+                    cur_motion = (cur_motion + 1) % len(QUEUE)
                 if event.key == pygame.K_ESCAPE and ch_s:
                     ch_s = False
 
@@ -186,8 +207,12 @@ if __name__ == '__main__':
             player_group.update()
         elif FIGHT:
             # Обработка боя
+            if QUEUE[cur_motion] in HEROES:
+                charges = [i[-1] for i in SKILLS[QUEUE[cur_motion][-1]]]
+            else:
+                charges = []
             ex.draw(ENEMYES, ENEMYES_HP, HEROES, HEROES_HP,
-                    cur_attack, QUEUE[cur_motion], choosing_enemy, ch_s)
+                    cur_attack, cur_skill, QUEUE[cur_motion], charges, choosing_enemy, ch_s)
             screen.blit(ex.screen, (0, 0))
 
             # Аттака монстров
@@ -206,6 +231,19 @@ if __name__ == '__main__':
             if len(list(filter(lambda x: x > 0, HEROES_HP))) == 0:
                 running, FIGHT = False, False
             if len(list(filter(lambda x: x > 0, ENEMYES_HP))) == 0:
+                # Перезарядка навыков
+                con = sqlite3.connect("Stats.db")
+                cur = con.cursor()
+                s = 'select distinct classId from skills'
+                res = [i[0] for i in cur.execute(s).fetchall()]
+                for i in res:
+                    s = f'select charges from skills where classId = {i}'
+                    res2 = [i[0] for i in cur.execute(s).fetchall()]
+                    for j in range(len(res2)):
+                        SKILLS[i][j][-1] = res2[j]
+                con.close()
+
+                # Начисление опыта
                 EXP[0] += 25 * sum(list(map(lambda x: x[-1], ENEMYES)))
                 if EXP[0] >= EXP[1]:
                     EXP[0] -= EXP[1]
