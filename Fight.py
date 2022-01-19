@@ -10,7 +10,8 @@ class FightScreen:
         self.screen = pygame.Surface(SIZE)
 
     def draw(self, Enemys, Enemys_Hp, Heroes, Heroes_Hp,
-             cur, cur_s, cur_m, charges, choosing=False, ch_s=False):
+             cur, cur_s, cur_m, cur_h,
+             charges, choosing=False, choosing_h=False, ch_s=False):
         # Отрисовка поля боя
         self.screen.fill(pygame.Color(50))
         font = pygame.font.Font(None, 25)
@@ -28,7 +29,7 @@ class FightScreen:
         pygame.draw.rect(self.screen, (75, 75, 75), (0, 626, 150, 34), 5)
         self.screen.blit(text, (10, 626))
         if choosing:
-            # Отрисовка окга выбора противника
+            # Отрисовка окна выбора противника
             text = font.render("Выбор противника", True, (255, 0, 0))
             self.screen.blit(text, (260, 560))
             s = [f'{i + 1} ' + Enemys[i][0] + f' {Enemys_Hp[i] if Enemys_Hp[i] > 0 else 0}'
@@ -46,6 +47,21 @@ class FightScreen:
             self.screen.blit(text, (160, 585 + 25 * cnt))
             text = font.render(f"Текущая цель: противник номер {cur + 1}", True, (255, 0, 0))
             self.screen.blit(text, (160, 635))
+            pygame.draw.rect(self.screen, (75, 75, 75), (150, 560, 510, 100), 5)
+        elif choosing_h:
+            # Отрисовка окна выбора героя
+            text = font.render("Выберите героя", True, (50, 255, 50))
+            self.screen.blit(text, (260, 560))
+            text = font.render("Дантэ", True, (50, 255, 50))
+            self.screen.blit(text, (200, 580))
+            text = font.render("Левап", True, (50, 255, 50))
+            self.screen.blit(text, (200, 600))
+            text = font.render("Ашадия", True, (50, 255, 50))
+            self.screen.blit(text, (200, 620))
+            text = font.render("Лилиан", True, (50, 255, 50))
+            self.screen.blit(text, (200, 640))
+            text = font.render(f">>>>", True, (50, 255, 50))
+            self.screen.blit(text, (160, 580 + 20 * cur_h))
             pygame.draw.rect(self.screen, (75, 75, 75), (150, 560, 510, 100), 5)
         elif ch_s:
             # Отрисовка окна выбора навыка
@@ -68,7 +84,7 @@ class FightScreen:
                 text = font.render(", ".join(res[n:i]), True, (0, 255, 100))
             self.screen.blit(text, (160, 585 + 25 * cnt))
             con.close()
-            text = font.render(f"Текущая навык номер {cur_s + 1}", True, (0, 255, 100))
+            text = font.render(f"Текущий навык номер {cur_s + 1}", True, (0, 255, 100))
             self.screen.blit(text, (160, 635))
             pygame.draw.rect(self.screen, (75, 75, 75), (150, 560, 510, 100), 5)
         else:
