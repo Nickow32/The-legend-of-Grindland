@@ -2,7 +2,6 @@ import sqlite3
 
 import pygame
 import os
-import sys
 
 from random import randint
 from Sprites import Tile, Enemy, Player, \
@@ -58,7 +57,6 @@ def load_map(filename="map1_1"):
     enemy_group.empty()
     tiles_group.empty()
     board = load_level(filename + '.txt')
-    x, y = None, None
     global PLAYER
     for y in range(len(board)):
         for x in range(len(board[y])):
@@ -75,30 +73,24 @@ def load_map(filename="map1_1"):
 
 
 if __name__ == '__main__':
+    # Переменные для статистики
+    Level = 0
+    EXP = [0, 250]
+    Bosses = 0
+    Kills = 0
+
     # Переменные для применения умений, защиты и атаки героев
     cur_motion = 0
     cur_attack = 0
     cur_skill = 0
     cur_buff = 0
     SKILLS = {}
-    con = sqlite3.connect("Stats.db")
-    cur = con.cursor()
-    s = 'select * from skills'
-    res = cur.execute(s).fetchall()
-    for i in res:
-        li = SKILLS.get(i[2], [])
-        li.append([i[1]] + list(i[3:]))
-        SKILLS[i[2]] = li
-    con.close()
     ch_s = False
     choosing_hero = False
     choosing_enemy = False
     Heroes_Status = ["N/a", "N/a", "N/a", "N/a"]
-
-    # Переменные для игрового прогресса
-    Level = 1
-    EXP = [0, 500]
-    Boss = 1
+    HEROES_HP = []
+    ENEMYES_HP = []
 
     # Переменные для контроля состояния игры: переход между картами, боевой и небоевой режимы
     ex = FightScreen()
@@ -137,23 +129,49 @@ if __name__ == '__main__':
                 # Проверка начала боя
                 enemy_group.update()
                 from Sprites import FIGHT
-                from Sprites import ENEMYES, ENEMYES_HP, HEROES, HEROES_HP, QUEUE
+                from Sprites import ENEMYES, HEROES, QUEUE
 
-                Heroes_Status = ["N/a", "N/a", "N/a", "N/a"]
+                # Подгатовка к бою
+                if HEROES:
+                    Leveled = []
+                    con = sqlite3.connect("Stats.db")
+                    cursor = con.cursor()
+                    for i in HEROES:
+                        res2 = cursor.execute(f"select * from Classes "
+                                              f"where id = "
+                                              f"(select Class "
+                                              f"from Heroes where name = '{i[0]}')").fetchone()[1:]
+                        stats = [int(i[j] * max(1, (res2[j] * Level))) for j in range(1, len(res2))]
+                        Leveled.append(tuple([i[0]] + stats + [i[-1]]))
+                    HEROES = Leveled
+                    HEROES_HP = list(map(lambda x: x[1], HEROES))
+                    ENEMYES_HP = list(map(lambda x: x[1], ENEMYES))
+                    Heroes_Status = ["N/a", "N/a", "N/a", "N/a"]
+                    SKILLS = {}
+                    s = f"select * from skills where minLevel <= {Level + 1}"
+                    res = cursor.execute(s).fetchall()
+                    for i in res:
+                        li = SKILLS.get(i[2], [])
+                        li.append([i[1]] + list(i[3:]))
+                        SKILLS[i[2]] = li
+                    con.close()
 
             if event.type == pygame.KEYDOWN and FIGHT:
                 # Осуществление действий героев в бою
 
                 # Аттака героев
-                if event.key == pygame.K_a and QUEUE[cur_motion] in HEROES \
+                if event.key == pygame.K_a \
+                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES)) \
                         and not choosing_enemy and not choosing_hero and not ch_s:
                     choosing_enemy = True
-                if event.key == pygame.K_SPACE and QUEUE[cur_motion] in HEROES and choosing_enemy:
+                if event.key == pygame.K_SPACE \
+                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES))\
+                        and choosing_enemy:
                     choosing_enemy = False
                     while ENEMYES_HP[cur_attack] <= 0:
                         cur_attack = (cur_attack + 1) % len(ENEMYES_HP)
-                    ENEMYES_HP[cur_attack] = ENEMYES_HP[cur_attack] \
-                                             - (QUEUE[cur_motion][2] - ENEMYES[cur_attack][3])
+                    ENEMYES_HP[cur_attack] = \
+                        ENEMYES_HP[cur_attack] - (QUEUE[cur_motion][2] - ENEMYES[cur_attack][3])
                     cur_motion = (cur_motion + 1) % len(QUEUE)
                     while ENEMYES_HP[cur_attack] <= 0 and \
                             len(list(filter(lambda x: x > 0, ENEMYES_HP))):
@@ -168,22 +186,29 @@ if __name__ == '__main__':
                         cur_attack = (cur_attack - 1) % len(ENEMYES_HP)
 
                 # Защита героев
-                if event.key == pygame.K_d and QUEUE[cur_motion] in HEROES \
+                if event.key == pygame.K_d \
+                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES)) \
                         and not choosing_enemy and not choosing_hero and not ch_s:
-                    Heroes_Status[HEROES.index(QUEUE[cur_motion])] = ["Defence", 1]
+                    Heroes_Status[list(map(lambda x: x[0], HEROES)).index(QUEUE[cur_motion][0])] \
+                        = ["Defence", 1]
                     cur_motion = (cur_motion + 1) % len(QUEUE)
 
                 # Навыки героев
-                if event.key == pygame.K_s and QUEUE[cur_motion] in HEROES \
+                if event.key == pygame.K_s \
+                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES)) \
                         and not choosing_enemy and not choosing_hero and not ch_s:
+                    cur_skill = 0
                     ch_s = True
-                if event.key == pygame.K_DOWN and QUEUE[cur_motion] in HEROES \
+                if event.key == pygame.K_DOWN \
+                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES)) \
                         and ch_s and not choosing_hero:
                     cur_skill = (cur_skill - 1) % len(SKILLS[QUEUE[cur_motion][-1]])
-                if event.key == pygame.K_UP and QUEUE[cur_motion] in HEROES \
+                if event.key == pygame.K_UP \
+                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES)) \
                         and ch_s and not choosing_hero:
                     cur_skill = (cur_skill + 1) % len(SKILLS[QUEUE[cur_motion][-1]])
-                if event.key == pygame.K_SPACE and QUEUE[cur_motion] in HEROES \
+                if event.key == pygame.K_SPACE \
+                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES)) \
                         and ch_s and not choosing_hero:
                     skill = SKILLS[QUEUE[cur_motion][-1]][cur_skill]
                     if skill[-1] == 0:
@@ -205,11 +230,17 @@ if __name__ == '__main__':
                     cur_motion = (cur_motion + 1) % len(QUEUE)
 
                 # Выбор цели(героя) на которой будет применён бафф
-                if event.key == pygame.K_DOWN and QUEUE[cur_motion] in HEROES and choosing_hero:
+                if event.key == pygame.K_DOWN \
+                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES)) \
+                        and choosing_hero:
                     cur_buff = (cur_buff + 1) % len(Heroes_Status)
-                if event.key == pygame.K_UP and QUEUE[cur_motion] in HEROES and choosing_hero:
+                if event.key == pygame.K_UP \
+                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES))\
+                        and choosing_hero:
                     cur_buff = (cur_buff - 1) % len(Heroes_Status)
-                if event.key == pygame.K_SPACE and QUEUE[cur_motion] in HEROES and choosing_hero:
+                if event.key == pygame.K_SPACE \
+                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES))\
+                        and choosing_hero:
                     skill = SKILLS[QUEUE[cur_motion][-1]][cur_skill]
                     Buffs = {"Уворот": "Dodge", "Прикрытие": "Defence"}
                     if skill[2] == "Buff":
@@ -240,18 +271,18 @@ if __name__ == '__main__':
             player_group.update()
         elif FIGHT:
             # Обработка боя
-            if QUEUE[cur_motion] in HEROES:
+            if QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES)):
                 charges = [i[-1] for i in SKILLS[QUEUE[cur_motion][-1]]]
             else:
                 charges = []
             ex.draw(ENEMYES, ENEMYES_HP, HEROES, HEROES_HP,
                     cur_attack, cur_skill, QUEUE[cur_motion], cur_buff,
-                    charges,
+                    Level, charges,
                     choosing_enemy, choosing_hero, ch_s)
             screen.blit(ex.screen, (0, 0))
 
             # Аттака монстров
-            if QUEUE[cur_motion] in ENEMYES:
+            if QUEUE[cur_motion][0] in list(map(lambda x: x[0], ENEMYES)):
                 ind = randint(0, 3)
                 if Heroes_Status[ind][0] == 'Defence':
                     HEROES_HP[ind] = HEROES_HP[ind] - (QUEUE[cur_motion][2] - HEROES[ind][3] * 1.5)
@@ -270,24 +301,25 @@ if __name__ == '__main__':
             if len(list(filter(lambda x: x > 0, HEROES_HP))) == 0:
                 running, FIGHT = False, False
             if len(list(filter(lambda x: x > 0, ENEMYES_HP))) == 0:
-                # Перезарядка навыков
-                con = sqlite3.connect("Stats.db")
-                cur = con.cursor()
-                s = 'select distinct classId from skills'
-                res = [i[0] for i in cur.execute(s).fetchall()]
-                for i in res:
-                    s = f'select charges from skills where classId = {i}'
-                    res2 = [i[0] for i in cur.execute(s).fetchall()]
-                    for j in range(len(res2)):
-                        SKILLS[i][j][-1] = res2[j]
-                con.close()
-
-                # Начисление опыта
+                # Начисление опыта и повышение уровня
                 EXP[0] += 25 * sum(list(map(lambda x: x[-1], ENEMYES)))
                 if EXP[0] >= EXP[1]:
                     EXP[0] -= EXP[1]
                     EXP[1] *= 1.5
                     Level += 1
+
+                # Перезарядка навыков
+                con = sqlite3.connect("Stats.db")
+                cursor = con.cursor()
+                SKILLS = {}
+                s = f"select * from skills where minLevel <= {Level + 1}"
+                res = cursor.execute(s).fetchall()
+                for i in res:
+                    li = SKILLS.get(i[2], [])
+                    li.append([i[1]] + list(i[3:]))
+                    SKILLS[i[2]] = li
+                con.close()
+
                 FIGHT = False
         pygame.display.flip()
         clock.tick(FPS)
