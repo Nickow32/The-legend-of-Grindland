@@ -39,7 +39,7 @@ tile_images = {
 }
 player_image = pygame.transform.scale(load_image('mar.png'), (66, 66))
 
-PLAYER = Player(5, 5, player_image)
+PLAYER = Player(4, 4, player_image)
 
 
 def load_level(filename):
@@ -67,9 +67,6 @@ def load_map(filename="map1_1"):
                 Enemy(x, y, tile_images['enemy'])
             elif board[y][x] == '#':
                 Tile(x, y, tile_images['wall'], "wall")
-            elif board[y][x] == '@':
-                Tile(x, y, tile_images['empty'], "empty")
-                PLAYER.rect.x, PLAYER.rect.y = x * TILE_S, y * TILE_S
 
 
 if __name__ == '__main__':
@@ -105,27 +102,30 @@ if __name__ == '__main__':
                 running = False
             if event.type == pygame.KEYDOWN and not FIGHT:
                 # Осуществление движения героя вне боя
-
                 if event.key == pygame.K_UP:
                     PLAYER.move(0, -1)
                     if PLAYER.rect.y < 0:
                         cur_map[1] -= 1
                         load_map(f"map{cur_map[0]}_{cur_map[1]}")
+                        PLAYER.move(0, 10)
                 if event.key == pygame.K_DOWN:
                     PLAYER.move(0, 1)
                     if PLAYER.rect.y >= 660:
                         cur_map[1] += 1
                         load_map(f"map{cur_map[0]}_{cur_map[1]}")
+                        PLAYER.move(0, -10)
                 if event.key == pygame.K_LEFT:
                     PLAYER.move(-1, 0)
                     if PLAYER.rect.x < 0:
                         cur_map[0] -= 1
                         load_map(f"map{cur_map[0]}_{cur_map[1]}")
+                        PLAYER.move(10, 0)
                 if event.key == pygame.K_RIGHT:
                     PLAYER.move(1, 0)
                     if PLAYER.rect.x >= 660:
                         cur_map[0] += 1
                         load_map(f"map{cur_map[0]}_{cur_map[1]}")
+                        PLAYER.move(-10, 0)
                 # Проверка начала боя
                 enemy_group.update()
                 from Sprites import FIGHT
