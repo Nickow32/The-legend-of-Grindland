@@ -11,7 +11,8 @@ class FightScreen:
 
     def draw(self, Enemys, Enemys_Hp, Heroes, Heroes_Hp,
              cur, cur_s, cur_m, cur_h,
-             charges, choosing=False, choosing_h=False, ch_s=False):
+             level, charges,
+             choosing=False, choosing_h=False, ch_s=False):
         # Отрисовка поля боя
         self.screen.fill(pygame.Color(50))
         font = pygame.font.Font(None, 25)
@@ -69,7 +70,7 @@ class FightScreen:
             self.screen.blit(text, (260, 560))
             con = sqlite3.connect("Stats.db")
             curs = con.cursor()
-            s = f"select * from Skills where classId = {cur_m[-1]}"
+            s = f"select * from Skills where classId = {cur_m[-1]} and minLevel <= {level + 1}"
             res = curs.execute(s).fetchall()
             res = [f"{i + 1} " + res[i][1] + f" {charges[i]}" for i in range(len(res))]
             n, cnt = 0, 0
@@ -81,7 +82,7 @@ class FightScreen:
                     cnt += 1
                     n = i - 1
             if i:
-                text = font.render(", ".join(res[n:i]), True, (0, 255, 100))
+                text = font.render("; ".join(res[n:i]), True, (0, 255, 100))
             self.screen.blit(text, (160, 585 + 25 * cnt))
             con.close()
             text = font.render(f"Текущий навык номер {cur_s + 1}", True, (0, 255, 100))
@@ -114,8 +115,8 @@ class FightScreen:
         for i in range(4):
             cof = 500 if i % 2 else 400
             pygame.draw.rect(self.screen, (75, 155, 255), (cof, 80 * i + 120, 95, 95))
-        if cur_m in Heroes:
-            i = Heroes.index(cur_m)
+        if cur_m[0] in list(map(lambda x: x[0], Heroes)):
+            i = list(map(lambda x: x[0], Heroes)).index(cur_m[0])
             cof = 500 if i % 2 else 400
             y = 80 * i + 120
             Points = [(cof + 19, y - 40), (cof + 48, y), (cof + 76, y - 40)]
