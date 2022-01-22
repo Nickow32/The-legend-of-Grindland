@@ -57,11 +57,20 @@ class Enemy(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, image):
         super().__init__(all_sprites, player_group)
+        self.core_image = image
         self.image = image
         self.rect = self.image.get_rect().move(
             TILE_S * pos_x, TILE_S * pos_y)
 
-    def move(self, x, y):
+    def move(self, x, y, vec):
+        if vec == "N":
+            self.image = pygame.transform.rotate(self.core_image, 180)
+        elif vec == "S":
+            self.image = pygame.transform.rotate(self.core_image, 0)
+        elif vec == "W":
+            self.image = pygame.transform.rotate(self.core_image, 270)
+        elif vec == "E":
+            self.image = pygame.transform.rotate(self.core_image, 90)
         self.rect.x += (TILE_S * x)
         self.rect.y += (TILE_S * y)
         if pygame.sprite.spritecollideany(self, block_group):

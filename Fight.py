@@ -9,7 +9,8 @@ class FightScreen:
     def __init__(self):
         self.screen = pygame.Surface(SIZE)
 
-    def draw(self, Enemys, Enemys_Hp, Heroes, Heroes_Hp,
+    def draw(self, Sprites,
+             Enemys, Enemys_Hp, Heroes, Heroes_Hp,
              cur, cur_s, cur_m, cur_h,
              level, charges,
              choosing=False, choosing_h=False, ch_s=False):
@@ -17,7 +18,8 @@ class FightScreen:
         self.screen.fill(pygame.Color(50))
         font = pygame.font.Font(None, 25)
 
-        fight_bg = pygame.transform.scale(pygame.image.load('Images/fight_background.png'), (660, 560))
+        fight_bg = pygame.transform.scale(pygame.image.load('Images/fight_background.png'),
+                                          (660, 560))
         self.screen.blit(fight_bg, fight_bg.get_rect(bottomright=(660, 560)))
 
         text = font.render("A Атака", True, (255, 100, 125))
@@ -59,7 +61,7 @@ class FightScreen:
             self.screen.blit(text, (200, 600))
             text = font.render("Ашадия", True, (50, 255, 50))
             self.screen.blit(text, (200, 620))
-            text = font.render("Лилиан", True, (50, 255, 50))
+            text = font.render("Юлиан", True, (50, 255, 50))
             self.screen.blit(text, (200, 640))
             text = font.render(f">>>>", True, (50, 255, 50))
             self.screen.blit(text, (160, 580 + 20 * cur_h))
@@ -98,7 +100,7 @@ class FightScreen:
             text = font.render("Ашадия", True, (255, 255, 100))
             pygame.draw.rect(self.screen, (75, 75, 75), (150, 610, 510, 25), 5)
             self.screen.blit(text, (160, 610))
-            text = font.render("Лилиан", True, (100, 255, 255))
+            text = font.render("Юлиан", True, (100, 255, 255))
             pygame.draw.rect(self.screen, (75, 75, 75), (150, 635, 510, 25), 5)
             self.screen.blit(text, (160, 635))
 
@@ -113,13 +115,15 @@ class FightScreen:
                 cof = 120 if i % 2 else 20
                 pygame.draw.rect(self.screen, (255, 75, 75), (cof, 95 * i + 80, 95, 95))
         for i in range(4):
+            if Heroes_Hp[i] <= 0:
+                continue
             cof = 500 if i % 2 else 400
-            pygame.draw.rect(self.screen, (75, 155, 255), (cof, 80 * i + 120, 95, 95))
+            self.screen.blit(Sprites[i], (cof, 80 * i + 120, 95, 95))
         if cur_m[0] in list(map(lambda x: x[0], Heroes)):
             i = list(map(lambda x: x[0], Heroes)).index(cur_m[0])
             cof = 500 if i % 2 else 400
             y = 80 * i + 120
-            Points = [(cof + 19, y - 40), (cof + 48, y), (cof + 76, y - 40)]
+            Points = [(cof + 30, y - 40), (cof + 59, y), (cof + 87, y - 40)]
             pygame.draw.polygon(self.screen, (255, 255, 0), Points)
         else:
             i = Enemys.index(cur_m)

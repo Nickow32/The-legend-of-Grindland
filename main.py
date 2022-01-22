@@ -10,7 +10,7 @@ from Fight import FightScreen
 
 pygame.init()
 SIZE = WI, HE = 660, 660
-FPS = 50
+FPS = 30
 TILE_S = 66
 screen = pygame.display.set_mode(SIZE)
 pygame.display.set_caption("Игре нужно название")
@@ -37,7 +37,9 @@ tile_images = {
     'enemy': pygame.transform.scale(load_image('box.png'), (66, 66)),
     'empty': pygame.transform.scale(load_image('grass.png'), (66, 66))
 }
-player_image = pygame.transform.scale(load_image('mar.png'), (66, 66))
+Heroes_img = [load_image("Данте.png"), load_image("Левап.png"),
+              load_image("Ашадия.png"), load_image("Юлиан.png")]
+player_image = pygame.transform.scale(load_image('данте1.png'), (66, 66))
 
 PLAYER = Player(4, 4, player_image)
 
@@ -103,29 +105,29 @@ if __name__ == '__main__':
             if event.type == pygame.KEYDOWN and not FIGHT:
                 # Осуществление движения героя вне боя
                 if event.key == pygame.K_UP:
-                    PLAYER.move(0, -1)
+                    PLAYER.move(0, -1, "N")
                     if PLAYER.rect.y < 0:
                         cur_map[1] -= 1
                         load_map(f"map{cur_map[0]}_{cur_map[1]}")
-                        PLAYER.move(0, 10)
+                        PLAYER.move(0, 10, "N")
                 if event.key == pygame.K_DOWN:
-                    PLAYER.move(0, 1)
+                    PLAYER.move(0, 1, "S")
                     if PLAYER.rect.y >= 660:
                         cur_map[1] += 1
                         load_map(f"map{cur_map[0]}_{cur_map[1]}")
-                        PLAYER.move(0, -10)
+                        PLAYER.move(0, -10, "S")
                 if event.key == pygame.K_LEFT:
-                    PLAYER.move(-1, 0)
+                    PLAYER.move(-1, 0, "W")
                     if PLAYER.rect.x < 0:
                         cur_map[0] -= 1
                         load_map(f"map{cur_map[0]}_{cur_map[1]}")
-                        PLAYER.move(10, 0)
+                        PLAYER.move(10, 0, "W")
                 if event.key == pygame.K_RIGHT:
-                    PLAYER.move(1, 0)
+                    PLAYER.move(1, 0, "E")
                     if PLAYER.rect.x >= 660:
                         cur_map[0] += 1
                         load_map(f"map{cur_map[0]}_{cur_map[1]}")
-                        PLAYER.move(-10, 0)
+                        PLAYER.move(-10, 0, "E")
                 # Проверка начала боя
                 enemy_group.update()
                 from Sprites import FIGHT
@@ -165,7 +167,7 @@ if __name__ == '__main__':
                         and not choosing_enemy and not choosing_hero and not ch_s:
                     choosing_enemy = True
                 if event.key == pygame.K_SPACE \
-                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES))\
+                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES)) \
                         and choosing_enemy:
                     choosing_enemy = False
                     while ENEMYES_HP[cur_attack] <= 0:
@@ -235,11 +237,11 @@ if __name__ == '__main__':
                         and choosing_hero:
                     cur_buff = (cur_buff + 1) % len(Heroes_Status)
                 if event.key == pygame.K_UP \
-                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES))\
+                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES)) \
                         and choosing_hero:
                     cur_buff = (cur_buff - 1) % len(Heroes_Status)
                 if event.key == pygame.K_SPACE \
-                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES))\
+                        and QUEUE[cur_motion][0] in list(map(lambda x: x[0], HEROES)) \
                         and choosing_hero:
                     skill = SKILLS[QUEUE[cur_motion][-1]][cur_skill]
                     Buffs = {"Уворот": "Dodge", "Прикрытие": "Defence"}
@@ -275,7 +277,7 @@ if __name__ == '__main__':
                 charges = [i[-1] for i in SKILLS[QUEUE[cur_motion][-1]]]
             else:
                 charges = []
-            ex.draw(ENEMYES, ENEMYES_HP, HEROES, HEROES_HP,
+            ex.draw(Heroes_img, ENEMYES, ENEMYES_HP, HEROES, HEROES_HP,
                     cur_attack, cur_skill, QUEUE[cur_motion], cur_buff,
                     Level, charges,
                     choosing_enemy, choosing_hero, ch_s)
