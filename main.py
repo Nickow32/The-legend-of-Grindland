@@ -13,7 +13,7 @@ SIZE = WI, HE = 660, 660
 FPS = 30
 TILE_S = 66
 screen = pygame.display.set_mode(SIZE)
-pygame.display.set_caption("Игре нужно название")
+pygame.display.set_caption("Легенда Гриндлэнда")
 clock = pygame.time.Clock()
 
 
@@ -71,11 +71,76 @@ def load_map(filename="map1_1"):
                 Tile(x, y, tile_images['wall'], "wall")
 
 
+def start_screen():
+    intro_text = ["Легенда Гриндлэнда", "",
+                  "Правила игры",
+                  "* Чтобы начать бой столкнитесь с противником", "",
+                  "* Чтобы войти в режим выбора противника нажмите 'a'",
+                  "* Чтобы войти в режим выбора навыков нажмите 's'",
+                  "* Чтобы защититься нажмите 'd'",
+                  "* Чтобы применить навык или аттаковать нажмите 'space'",
+                  "* Чтобы отменить действие нажмите 'esc'", "",
+                  "Цель игры - убить как можно больше противников"]
+
+    fon = pygame.transform.scale(load_image('box.png'), (WI, HE))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 30)
+    text_coord = 50
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 10
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def end_screen(kills, level):
+    intro_text = ["Вы мертвы!!", "",
+                  f"Всего противников повержено: {kills}",
+                  f"Максимальный уровень {level + 1}"]
+
+    fon = pygame.transform.scale(load_image('box.png'), (WI, HE))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 30)
+    text_coord = 50
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 10
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
 if __name__ == '__main__':
+    start_screen()
+
     # Переменные для статистики
     Level = 0
     EXP = [0, 250]
-    Bosses = 0
     Kills = 0
 
     # Переменные для применения умений, защиты и атаки героев
@@ -156,6 +221,8 @@ if __name__ == '__main__':
                         li = SKILLS.get(i[2], [])
                         li.append([i[1]] + list(i[3:]))
                         SKILLS[i[2]] = li
+                    ENEMYES = [tuple([i[0]] + [max(j, int(j * 1.75 * Level)) for j in i[1:]])
+                               for i in ENEMYES]
                     con.close()
 
             if event.type == pygame.KEYDOWN and FIGHT:
@@ -172,8 +239,9 @@ if __name__ == '__main__':
                     choosing_enemy = False
                     while ENEMYES_HP[cur_attack] <= 0:
                         cur_attack = (cur_attack + 1) % len(ENEMYES_HP)
-                    ENEMYES_HP[cur_attack] = \
-                        ENEMYES_HP[cur_attack] - (QUEUE[cur_motion][2] - ENEMYES[cur_attack][3])
+                    ENEMYES_HP[cur_attack] -= \
+                        max(0, (QUEUE[cur_motion][2] - ENEMYES[cur_attack][3]))
+                    ENEMYES_HP[cur_attack] = round(ENEMYES_HP[cur_attack], 2)
                     cur_motion = (cur_motion + 1) % len(QUEUE)
                     while ENEMYES_HP[cur_attack] <= 0 and \
                             len(list(filter(lambda x: x > 0, ENEMYES_HP))):
@@ -220,14 +288,19 @@ if __name__ == '__main__':
                         cur_attack = (cur_attack + 1) % len(ENEMYES_HP)
                     if skill[2] == "Damage":
                         ENEMYES_HP[cur_attack] -= QUEUE[cur_motion][2] * skill[-2]
+                        ENEMYES_HP[cur_attack] = round(ENEMYES_HP[cur_attack], 2)
                         skill[-1] -= 1
                     elif skill[2] == "DamageAOE":
                         for i in range(len(ENEMYES_HP)):
                             ENEMYES_HP[i] -= QUEUE[cur_motion][2] * skill[-2]
+                            ENEMYES_HP[i] = round(ENEMYES_HP[i], 2)
                         skill[-1] -= 1
                     elif skill[2] in ["Buff", "Heal"]:
                         choosing_hero = True
                         continue
+                    elif skill[2] == "HealAOE":
+                        for i in range(len(HEROES_HP)):
+                            HEROES_HP[i] += QUEUE[cur_motion][2] * skill[-2]
                     ch_s = False
                     cur_motion = (cur_motion + 1) % len(QUEUE)
 
@@ -277,6 +350,17 @@ if __name__ == '__main__':
                 charges = [i[-1] for i in SKILLS[QUEUE[cur_motion][-1]]]
             else:
                 charges = []
+
+            # Пропуск хода погибших
+            eNames = list(map(lambda x: x[0], ENEMYES))
+            hNames = list(map(lambda x: x[0], HEROES))
+            curr = QUEUE[cur_motion][0]
+            if curr in hNames and HEROES_HP[hNames.index(curr)] <= 0:
+                cur_motion = (cur_motion + 1) % len(QUEUE)
+            elif curr in eNames and ENEMYES_HP[eNames.index(curr)] <= 0:
+                cur_motion = (cur_motion + 1) % len(QUEUE)
+
+            # Прорисовка поля боя
             ex.draw(Heroes_img, ENEMYES, ENEMYES_HP, HEROES, HEROES_HP,
                     cur_attack, cur_skill, QUEUE[cur_motion], cur_buff,
                     Level, charges,
@@ -286,8 +370,11 @@ if __name__ == '__main__':
             # Аттака монстров
             if QUEUE[cur_motion][0] in list(map(lambda x: x[0], ENEMYES)):
                 ind = randint(0, 3)
+                while HEROES_HP[ind] <= 0:
+                    ind = randint(0, 3)
                 if Heroes_Status[ind][0] == 'Defence':
-                    HEROES_HP[ind] = HEROES_HP[ind] - (QUEUE[cur_motion][2] - HEROES[ind][3] * 1.5)
+                    HEROES_HP[ind] -= max(1, (QUEUE[cur_motion][2] - HEROES[ind][3] * 1.5))
+                    HEROES_HP[ind] = round(HEROES_HP[ind], 2)
                     Heroes_Status[ind][1] -= 1
                     if Heroes_Status[ind][1] == 0:
                         Heroes_Status[ind] = "N/a"
@@ -296,19 +383,23 @@ if __name__ == '__main__':
                     if Heroes_Status[ind][1] == 0:
                         Heroes_Status[ind] = "N/a"
                 else:
-                    HEROES_HP[ind] = HEROES_HP[ind] - (QUEUE[cur_motion][2] - HEROES[ind][3])
+                    HEROES_HP[ind] -= max(1, (QUEUE[cur_motion][2] - HEROES[ind][3]))
+                    HEROES_HP[ind] = round(HEROES_HP[ind], 2)
                 cur_motion = (cur_motion + 1) % len(QUEUE)
 
-            # Проверка победа или поражение
+            # Победа или поражение
             if len(list(filter(lambda x: x > 0, HEROES_HP))) == 0:
                 running, FIGHT = False, False
+                end_screen(Kills, Level)
             if len(list(filter(lambda x: x > 0, ENEMYES_HP))) == 0:
-                # Начисление опыта и повышение уровня
+                # Начисление опыта, убийств и повышение уровня
                 EXP[0] += 25 * sum(list(map(lambda x: x[-1], ENEMYES)))
                 if EXP[0] >= EXP[1]:
                     EXP[0] -= EXP[1]
                     EXP[1] *= 1.5
                     Level += 1
+                Kills += len(ENEMYES)
+                print(Kills)
 
                 # Перезарядка навыков
                 con = sqlite3.connect("Stats.db")
@@ -321,7 +412,6 @@ if __name__ == '__main__':
                     li.append([i[1]] + list(i[3:]))
                     SKILLS[i[2]] = li
                 con.close()
-
                 FIGHT = False
         pygame.display.flip()
         clock.tick(FPS)

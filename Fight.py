@@ -126,7 +126,7 @@ class FightScreen:
             Points = [(cof + 30, y - 40), (cof + 59, y), (cof + 87, y - 40)]
             pygame.draw.polygon(self.screen, (255, 255, 0), Points)
         else:
-            i = Enemys.index(cur_m)
+            i = list(map(lambda x: x[0], Enemys)).index(cur_m[0])
             cof = 120 if i % 2 else 20
             y = 95 * i + 80
             Points = [(cof + 19, y - 40), (cof + 48, y), (cof + 76, y - 40)]
