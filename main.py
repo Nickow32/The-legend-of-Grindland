@@ -10,7 +10,7 @@ from Fight import FightScreen
 
 pygame.init()
 SIZE = WI, HE = 660, 660
-FPS = 30
+FPS = 60
 TILE_S = 66
 screen = pygame.display.set_mode(SIZE)
 pygame.display.set_caption("Легенда Гриндлэнда")
@@ -33,12 +33,13 @@ def load_image(name, colorkey=None):
 
 
 tile_images = {
-    'wall': pygame.transform.scale(load_image('box.png'), (66, 66)),
+    'wall': pygame.transform.scale(load_image('кусты.png'), (66, 66)),
     'enemy': pygame.transform.scale(load_image('box.png'), (66, 66)),
     'empty': pygame.transform.scale(load_image('grass.png'), (66, 66))
 }
 Heroes_img = [load_image("Данте.png"), load_image("Левап.png"),
               load_image("Ашадия.png"), load_image("Юлиан.png")]
+Enemys_img = []
 player_image = pygame.transform.scale(load_image('данте1.png'), (66, 66))
 
 PLAYER = Player(4, 4, player_image)
@@ -62,10 +63,8 @@ def load_map(filename="map1_1"):
     global PLAYER
     for y in range(len(board)):
         for x in range(len(board[y])):
-            if board[y][x] == '.':
-                Tile(x, y, tile_images['empty'], "empty")
-            elif board[y][x] == 'E':
-                Tile(x, y, tile_images['empty'], "empty")
+            Tile(x, y, tile_images['empty'], "empty")
+            if board[y][x] == 'E':
                 Enemy(x, y, tile_images['enemy'])
             elif board[y][x] == '#':
                 Tile(x, y, tile_images['wall'], "wall")
@@ -223,6 +222,7 @@ if __name__ == '__main__':
                         SKILLS[i[2]] = li
                     ENEMYES = [tuple([i[0]] + [max(j, int(j * 1.75 * Level)) for j in i[1:]])
                                for i in ENEMYES]
+                    Enemys_img = [load_image(f"{i[0].lower()}.png") for i in ENEMYES]
                     con.close()
 
             if event.type == pygame.KEYDOWN and FIGHT:
@@ -361,7 +361,8 @@ if __name__ == '__main__':
                 cur_motion = (cur_motion + 1) % len(QUEUE)
 
             # Прорисовка поля боя
-            ex.draw(Heroes_img, ENEMYES, ENEMYES_HP, HEROES, HEROES_HP,
+            ex.draw(Heroes_img, Enemys_img,
+                    ENEMYES, ENEMYES_HP, HEROES, HEROES_HP,
                     cur_attack, cur_skill, QUEUE[cur_motion], cur_buff,
                     Level, charges,
                     choosing_enemy, choosing_hero, ch_s)
@@ -399,7 +400,6 @@ if __name__ == '__main__':
                     EXP[1] *= 1.5
                     Level += 1
                 Kills += len(ENEMYES)
-                print(Kills)
 
                 # Перезарядка навыков
                 con = sqlite3.connect("Stats.db")

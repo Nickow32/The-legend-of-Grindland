@@ -9,7 +9,7 @@ class FightScreen:
     def __init__(self):
         self.screen = pygame.Surface(SIZE)
 
-    def draw(self, Sprites,
+    def draw(self, Sprites, E_Sprites,
              Enemys, Enemys_Hp, Heroes, Heroes_Hp,
              cur, cur_s, cur_m, cur_h,
              level, charges,
@@ -113,7 +113,7 @@ class FightScreen:
         for i in range(len(Enemys)):
             if Enemys_Hp[i] > 0:
                 cof = 120 if i % 2 else 20
-                pygame.draw.rect(self.screen, (255, 75, 75), (cof, 95 * i + 80, 95, 95))
+                self.screen.blit(E_Sprites[i], (cof, 95 * i + 80, 95, 95))
         for i in range(4):
             if Heroes_Hp[i] <= 0:
                 continue

@@ -17,13 +17,30 @@ enemy_group = pygame.sprite.Group()
 # Классы спрайтов и их функции
 class Tile(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, image, type):
+        self.frames = []
         if type == "wall":
             super().__init__(all_sprites, block_group)
+            self.cut_sheet(image, 2, 1)
         elif type == "empty":
             super().__init__(all_sprites, tiles_group)
-        self.image = image
+            self.cut_sheet(image, 1, 1)
+        self.cur_frame = 0
+        self.image = self.frames[self.cur_frame]
         self.rect = self.image.get_rect().move(
             TILE_S * pos_x, TILE_S * pos_y)
+
+    def cut_sheet(self, sheet, columns, rows):
+        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
+                                sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_location = (self.rect.w * i, self.rect.h * j)
+                self.frames.append(pygame.transform.scale(sheet.subsurface(pygame.Rect(
+                    frame_location, self.rect.size)), (66, 66)))
+
+    def update(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+        self.image = self.frames[self.cur_frame]
 
 
 class Enemy(pygame.sprite.Sprite):
